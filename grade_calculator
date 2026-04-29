@@ -1,0 +1,45 @@
+# ROBERT JB BOLEN   BSIT 2B
+# to compute average
+def average_computing(grades):
+    return sum(grades) / len(grades)
+
+# to check if they pass or not
+def check_status(avg):
+    if avg  >= 75:
+        return "Passed"
+    else:
+        return "Failed"
+
+# list to store grades
+grades = []
+
+# tuple to store the subjects
+subjects = ("ADET", "NET1", "PYTHON", "WEBDEV", "GAMEDEV", "SOCSCI103", "SOCSCI102", "RIZAL", "PE4")
+
+# input grades
+for subject in subjects:
+    while True:
+        grade = float(input(f"Enter your grade for {subject}: "))
+        # to check if the input in between 0 - 100 if it is then its breaks and asks the next subject if its not it will print invalid grade then ask the grade for the subject again
+        if 0 <= grade <= 100:
+            grades.append(grade)
+            break
+        else:
+             print(f"Invalid grade for {subject}!")
+
+# using functions to get the average and the status if pass or not
+final_avg = average_computing(grades)
+status = check_status(final_avg)
+
+#summary of the grades
+print("========= List of Grades ==========")
+for i in range(len(subjects)): #loops til it prints all of the things in both subjects and grades until the end of the range or given length
+    print(f"{subjects[i]}: {grades[i]}")
+
+#status and average of the grades
+print("-" * 36)
+print(f"\nAverage: {final_avg:.2f}")
+print(f"Status: {status}")
+print("=" * 36)
+        
+
