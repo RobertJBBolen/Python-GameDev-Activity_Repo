@@ -55,6 +55,18 @@ BOSS_STATS = {
         "gold": 200
     },
 }
+# Final boss (Floor 5 only)
+FINAL_BOSS_STATS = {
+    "The Shadow Dragon": {
+        "hp": 300,
+        "atk": 40,
+        "def": 20,
+        "gold": 1000
+    }
+}
+
+def spawn_final_boss():
+    return "The Shadow Dragon"
 
 def spawn_normal_enemy():
     N_enemy = choice(list(ENEMY_STATS.keys()))

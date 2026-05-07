@@ -1,5 +1,5 @@
 import random
-from enemies import ENEMY_STATS, BOSS_STATS, spawn_normal_enemy, spawn_boss_enemy
+from enemies import ENEMY_STATS, BOSS_STATS, FINAL_BOSS_STATS, spawn_normal_enemy, spawn_boss_enemy, spawn_final_boss
 
 # DATA 
 ROLES = { 
@@ -87,6 +87,7 @@ def shop():
         else:
             print("Not enough gold!")
 
+# function for both enemy and player action (Attack, Drink potion and run)
 def battle(enemy_name, stats_dict):
     enemy_hp = stats_dict[enemy_name]["hp"]
     enemy_atk = stats_dict[enemy_name]["atk"]
@@ -114,8 +115,12 @@ def battle(enemy_name, stats_dict):
                 print("No potions left!")
                 continue
         elif action == "3":
-            print("You escaped, but lost 10 gold!")
-            player["gold"] = max(0, player["gold"] - 10)
+            if player["gold"] >= 10:
+                player["gold"] -= 10
+                print("You escaped, but dropped 10 gold in the panic!")
+            else:
+                player["gold"] = 0
+                print("You escaped, but you have no gold left to lose!")
             return False
         
         if enemy_hp > 0:
@@ -153,33 +158,64 @@ player = {
 
 # MAIN GAME LOOP
 while current_floor <= 5:
-    print(f"\n--- FLOOR {current_floor} HUB ---")
+    print(f"\n" + "="*20)
+    print(f"   FLOOR {current_floor} HUB")
+    print("="*20)
+    
+    # Check if its the final floor
+    # Check if it's the final floor
+    if current_floor == 5:
+        print("\n" + "!" * 50)
+        print("!!!   WARNING: YOU HAVE REACHED THE FINAL FLOOR   !!!")
+        print("!" * 50)
+        
+        # Give the player a final choice: Fight or Shop (one last time)
+        print("\n1. FACE THE FINAL BOSS\n2. Final Visit to Shop\n3. View Stats")
+        final_choice = input("There is no turning back now. Choose: ")
+        
+        if final_choice == "1":
+            f_name = spawn_final_boss() # Spawns the Dragon!
+            if battle(f_name, FINAL_BOSS_STATS): # Uses the new dictionary
+                current_floor += 1
+                continue 
+        elif final_choice == "2":
+            shop()
+            continue # Returns to the Floor 5 "Warning" screen
+        elif final_choice == "3":
+            display_stats()
+            continue
+        else:
+            print("You hesitate... but the darkness is patient.")
+            continue
+    # Menu for Floors 1-4
     print("1. Explore (Fight) | 2. Boss Altar | 3. Shop | 4. Stats | 5. Quit")
     move = input("What will you do? ")
 
     if move == "1":
         e_name = spawn_normal_enemy()
         if battle(e_name, ENEMY_STATS):
-            # Chance to move up a floor after winning a normal fight
+            # 50% chance to find stairs
             if random.random() > 0.5: 
                 current_floor += 1
-                print(f"--- You found stairs! Moving to Floor {current_floor} ---")
+                print(f"\n--- You found stairs! Moving to Floor {current_floor} ---")
                 
     elif move == "2":
         b_name = spawn_boss_enemy()
         if battle(b_name, BOSS_STATS):
             current_floor += 1
-            print(f"--- BOSS DEFEATED! Moving to Floor {current_floor} ---")
+            print(f"\n--- BOSS DEFEATED! Moving to Floor {current_floor} ---")
             
     elif move == "3":
         shop()
     elif move == "4":
         display_stats()
     elif move == "5":
-        print("Goodbye!")
+        print("Giving up so soon? Goodbye!")
         break
 
+# Victory Message
 if current_floor > 5:
-    print("\n" + "="*40)
-    print("CONGRATULATIONS! YOU CLEARED THE DUNGEON!")
-    print("="*40)
+    print("\n" + "*"*45)
+    print("  CONGRATULATIONS! YOU HAVE CLEARED THE DUNGEON!")
+    print(f"  {player['name']} the {player['role']} returns a Legend!")
+    print("*"*45)
