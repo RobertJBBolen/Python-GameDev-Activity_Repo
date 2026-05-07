@@ -163,11 +163,10 @@ while current_floor <= 5:
     print("="*20)
     
     # Check if its the final floor
-    # Check if it's the final floor
     if current_floor == 5:
-        print("\n" + "!" * 50)
+        print("\n" + "!" * 53)
         print("!!!   WARNING: YOU HAVE REACHED THE FINAL FLOOR   !!!")
-        print("!" * 50)
+        print("!" * 53)
         
         # Give the player a final choice: Fight or Shop (one last time)
         print("\n1. FACE THE FINAL BOSS\n2. Final Visit to Shop\n3. View Stats")
@@ -175,7 +174,7 @@ while current_floor <= 5:
         
         if final_choice == "1":
             f_name = spawn_final_boss() # Spawns the Dragon!
-            if battle(f_name, FINAL_BOSS_STATS): # Uses the new dictionary
+            if battle(f_name, FINAL_BOSS_STATS): 
                 current_floor += 1
                 continue 
         elif final_choice == "2":
@@ -184,9 +183,7 @@ while current_floor <= 5:
         elif final_choice == "3":
             display_stats()
             continue
-        else:
-            print("You hesitate... but the darkness is patient.")
-            continue
+
     # Menu for Floors 1-4
     print("1. Explore (Fight) | 2. Boss Altar | 3. Shop | 4. Stats | 5. Quit")
     move = input("What will you do? ")
