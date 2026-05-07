@@ -1,0 +1,184 @@
+import random
+from enemies import ENEMY_STATS, BOSS_STATS, spawn_normal_enemy, spawn_boss_enemy
+
+# DATA 
+ROLES = { 
+    "Tank": {
+        "hp": 150, 
+        "atk": 15, 
+        "def": 10
+        },
+    "DPS": {
+        "hp": 100, 
+        "atk": 25, 
+        "def": 5
+        },
+    "Healer": {
+        "hp": 85, 
+        "atk": 12, 
+        "def": 5
+        }
+}
+
+SHOP_ITEMS = {
+    "1": {
+        "name": 
+        "Health Potion", 
+        "cost": 30, 
+        "type": "potion"
+        },
+    "2": 
+    {"name": 
+     "Iron Sword", 
+     "cost": 50, 
+     "type": "weapon", 
+     "atk_buff": 10
+     },
+    "3": {
+        "name": 
+        "Steel Plate", 
+        "cost": 50, 
+        "type": "armor", 
+        "def_buff": 5
+        }
+}
+
+# FUNCTIONS 
+
+#Function to display stats
+def display_stats():
+    print("\n===== PLAYER STATS =====")
+    for stat, value in player.items():
+        print(f"{stat.capitalize()}: {value}")
+
+#Function to choose roles
+def choose_role():
+    while True:
+        print("\nChoose Your Class: 1. Tank | 2. DPS | 3. Healer")
+        role = input("Enter choice: ")
+        if role == "1": 
+            return "Tank"
+        if role == "2": 
+            return "DPS"
+        if role == "3": 
+            return "Healer"
+        print("Invalid choice!")
+
+#function for shop
+def shop():
+    print(f"\n--- Welcome to the Shop! (Gold: {player['gold']}) ---")
+    for k, v in SHOP_ITEMS.items(): #k = is for the number (1. ----) v is placeholder so the name and cost will be printed''
+        print(f"{k}. {v['name']} ({v['cost']} Gold)")
+    print("4. Exit")
+    
+    choice = input("Buy something? ")
+    if choice in SHOP_ITEMS:
+        item = SHOP_ITEMS[choice]
+        if player["gold"] >= item["cost"]:
+            player["gold"] -= item["cost"]
+            if item["type"] == "potion":
+                player["potions"] += 1
+            elif item["type"] == "weapon":
+                player["atk"] += item["atk_buff"]
+            elif item["type"] == "armor":
+                player["def"] += item["def_buff"]
+            print(f"Purchased {item['name']}!")
+        else:
+            print("Not enough gold!")
+
+def battle(enemy_name, stats_dict):
+    enemy_hp = stats_dict[enemy_name]["hp"]
+    enemy_atk = stats_dict[enemy_name]["atk"]
+    enemy_def = stats_dict[enemy_name]["def"]
+    enemy_gold = stats_dict[enemy_name]["gold"]
+
+    print(f"\n!!! A {enemy_name} appeared on Floor {current_floor} !!!")
+
+    while enemy_hp > 0 and player["hp"] > 0:
+        print(f"\n{enemy_name}: {enemy_hp} HP | {player['name']}: {player['hp']} HP")
+        action = input("1. Attack | 2. Potion | 3. Run: ")
+
+        if action == "1":
+            damage = max(1, player["atk"] - enemy_def)
+            enemy_hp -= damage
+            print(f"You dealt {damage} damage!")
+        elif action == "2":
+            if player["potions"] > 0:
+                heal_amount = 40
+                player["hp"] = min(player["max_hp"], player["hp"] + heal_amount)
+                player["potions"] -= 1
+                print(f"Healed! Current HP: {player['hp']}")
+                continue
+            else:
+                print("No potions left!")
+                continue
+        elif action == "3":
+            print("You escaped, but lost 10 gold!")
+            player["gold"] = max(0, player["gold"] - 10)
+            return False
+        
+        if enemy_hp > 0:
+            e_damage = max(1, enemy_atk - player["def"])
+            player["hp"] -= e_damage
+            print(f"The {enemy_name} hits you for {e_damage} damage!")
+
+    if player["hp"] <= 0:
+        print("\nYOU HAVE BEEN DEFEATED.")
+        exit()
+    else:
+        print(f"Victory! You killed {enemy_name} and found {enemy_gold} gold.")
+        player["gold"] += enemy_gold
+        return True
+
+#  START GAME
+player_name = input("Enter your player name: ")
+print("\033[0;35m-\033[0m" * 40)
+print(f"        \033[0;35mWelcome to the Dungeon!\n             {player_name}!\033[0m")
+print("\033[0;35m-\033[0m" * 40)
+
+player_role = choose_role()
+current_floor = 1
+
+player = {
+    "name": player_name,
+    "role": player_role,
+    "hp": ROLES[player_role]["hp"],
+    "max_hp": ROLES[player_role]["hp"],
+    "atk": ROLES[player_role]["atk"],
+    "def": ROLES[player_role]["def"],
+    "gold": 50,
+    "potions": 3
+}
+
+# MAIN GAME LOOP
+while current_floor <= 5:
+    print(f"\n--- FLOOR {current_floor} HUB ---")
+    print("1. Explore (Fight) | 2. Boss Altar | 3. Shop | 4. Stats | 5. Quit")
+    move = input("What will you do? ")
+
+    if move == "1":
+        e_name = spawn_normal_enemy()
+        if battle(e_name, ENEMY_STATS):
+            # Chance to move up a floor after winning a normal fight
+            if random.random() > 0.5: 
+                current_floor += 1
+                print(f"--- You found stairs! Moving to Floor {current_floor} ---")
+                
+    elif move == "2":
+        b_name = spawn_boss_enemy()
+        if battle(b_name, BOSS_STATS):
+            current_floor += 1
+            print(f"--- BOSS DEFEATED! Moving to Floor {current_floor} ---")
+            
+    elif move == "3":
+        shop()
+    elif move == "4":
+        display_stats()
+    elif move == "5":
+        print("Goodbye!")
+        break
+
+if current_floor > 5:
+    print("\n" + "="*40)
+    print("CONGRATULATIONS! YOU CLEARED THE DUNGEON!")
+    print("="*40)
