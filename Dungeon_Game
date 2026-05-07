@@ -283,7 +283,6 @@ while current_floor <= 5:
 
 # Victory Message
 if current_floor > 5:
-    print("\n" + "*"*45)
-    print("  CONGRATULATIONS! YOU HAVE CLEARED THE DUNGEON!")
-    print(f"  {player['name']} the {player['role']} returns a Legend!")
-    print("*"*45)
+    print(f"{GREEN}*{RESET}"*45)
+    print(f"{GREEN}  CONGRATULATIONS! YOU HAVE CLEARED THE DUNGEON!{RESET}")
+    print(f"{GREEN}*{RESET}"*45)
