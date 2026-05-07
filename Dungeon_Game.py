@@ -7,19 +7,19 @@ ROLES = {
     "Tank": {
         "hp": 150, 
         "atk": 15, 
-        "def": 10,
+        "def": 15,
         "skill": "Shield"
         },
     "DPS": {
-        "hp": 100, 
+        "hp": 120, 
         "atk": 25, 
-        "def": 5,
+        "def": 13,
         "skill": "Double Strike"
         },
     "Healer": {
-        "hp": 85, 
+        "hp": 105, 
         "atk": 12, 
-        "def": 5,
+        "def": 10,
         "skill": "Heal"
         }
 }
