@@ -1,8 +1,8 @@
 import random
 from colors import * #for coloring the text
-from enemies import *
+from enemies import * #mainly for enemy data, and to spawn random enemy in the dungeon floors
 
-# DATA 
+# DATA DICTIONARIES
 ROLES = { 
     "Tank": {
         "hp": 150, 
@@ -49,13 +49,13 @@ SHOP_ITEMS = {
 
 # FUNCTIONS 
 
-#Function to display stats
+#Function to display stats it loops to display all the stats 
 def display_stats():
     print("\n===== PLAYER STATS =====")
     for stat, value in player.items():
         print(f"{stat.capitalize()}: {value}")
 
-#Function to choose roles
+#Function to choose roles loops until the player gives a valid choice
 def choose_role():
     while True:
         print("\nChoose Your Class: 1. Tank | 2. DPS | 3. Healer")
@@ -68,14 +68,14 @@ def choose_role():
             return "Healer"
         print("Invalid choice!")
 
-#function for shop
+#function for shop 
 def shop():
     print(f"\n--- Welcome to the Shop! (Gold: {player['gold']}) ---")
     for n, i in SHOP_ITEMS.items(): #n = is for the number (1. ----) i is placeholder for the item name and cost
         print(f"{n}. {i['name']} ({i['cost']} Gold)")
     print("4. Exit")
     
-    #shopping for items
+    #shopping for items it checks if you have enough gold to buy an item from the shop + it permanently adds the buffs depends on what the item you bought in the shop (Except for the healing potion)
     choice = input("Buy something? ")
     if choice in SHOP_ITEMS:
         item = SHOP_ITEMS[choice]
@@ -94,22 +94,24 @@ def shop():
 # function for both enemy and player action (Attack, Drink potion and run)
 
 def battle(enemy_name, stats_dict):
+    #variables for the enemy stats (When called it should return back with an enemy name and stats for the enemy)
     enemy_hp = stats_dict[enemy_name]["hp"]
     enemy_atk = stats_dict[enemy_name]["atk"]
     enemy_def = stats_dict[enemy_name]["def"]
     enemy_gold = stats_dict[enemy_name]["gold"]
     
-    # Combat States
+    # Combat States 
     is_blocking = False
     is_dodging = False
     is_parrying = False
 
     print(f"\n{RED}!!! A {enemy_name} appeared !!!{RESET}")
 
+    #it will loop aslong as the enemy and player are still alive
     while enemy_hp > 0 and player["hp"] > 0:
         print(f"\n{RED}{enemy_name}: {enemy_hp} HP{RESET} | {GREEN}{player['name']}: {player['hp']} HP{RESET}")
         
-        # Display Menu based on Role
+        # Display Menu depending on which Role was picked
         if player["role"] == "Healer":
             print(f"{YELLOW}1. Attack | 2. Heal (Skill) | 3. Dodge | 4. Potion{RESET}")
         elif player["role"] == "DPS":
@@ -122,12 +124,13 @@ def battle(enemy_name, stats_dict):
         # Reset states each turn
         is_blocking = is_dodging = is_parrying = False
 
+        # normal attack 
         if action == "1":
-            damage = max(1, player["atk"] - enemy_def)
+            damage = max(1, player["atk"] - enemy_def) #the function max is used for comparing which is bigger in this case if ever the atk - def became a negative number it will automatically do 1 dmg since 1 > negative number
             enemy_hp -= damage
             print(f"{CYAN}You dealt {damage} damage!{RESET}")
             
-        elif action == "2": # SPECIAL SKILLS
+        elif action == "2": # SPECIAL SKILLS for each roles
             if player["role"] == "Healer":
                 heal = 25
                 player["hp"] = min(player["max_hp"], player["hp"] + heal)
@@ -159,7 +162,7 @@ def battle(enemy_name, stats_dict):
         if enemy_hp > 0:
             e_damage = max(1, enemy_atk - player["def"])
 
-            # 1. DODGE Standard 50/50 Chance
+            # DODGE has Standard 50/50 Chance
             if is_dodging:
                 if random.random() < 0.50:
                     print(f"{CYAN}WHOOSH! You dodged the attack!{RESET}")
@@ -167,32 +170,34 @@ def battle(enemy_name, stats_dict):
                 else:
                     print(f"{RED}Dodge failed!{RESET}")
 
-            # 2. BLOCK Tank Guaranteed but partial
+            # BLOCK Tank Guaranteed but partial dmg can still go through
             elif is_blocking:
                 e_damage = e_damage // 5
                 print(f"{BLUE}CLANG! Your shield absorbed the impact.{RESET}")
 
-            # 3. PARRY (DPS - High Risk / Low Chance / High Reward)
+            # PARRY DPS has a high atk reward but high risk and low chance to succeed
             elif is_parrying:
-                # Lowered to 35% chance - requires luck!
+                # Lowered to 35% chance
                 if random.random() < 0.35:
-                    counter_dmg = player["atk"] # Deals full attack damage back!
+                    counter_dmg = player["atk"] # Deals full attack damage back
                     enemy_hp -= counter_dmg
                     print(f"{MAGENTA}PERFECT PARRY! You deflected the hit and countered for {counter_dmg}!{RESET}")
                     e_damage = 0
                 else:
-                    # Failed parry makes you take 1.2x more damage!
+                    # Failed parry makes you take 1.2x more damage
                     e_damage = int(e_damage * 1.2)
                     print(f"{RED}PARRY FAILED! You left yourself wide open!{RESET}")
 
-            # Apply final damage to player
+            # Apply final damage of the enemy to player
             player["hp"] -= e_damage
             if e_damage > 0:
                 print(f"{RED}The {enemy_name} hits you for {e_damage} damage!{RESET}")
 
+    # player dies 
     if player["hp"] <= 0:
         print(f"\n{RED}YOU HAVE BEEN DEFEATED.{RESET}")
         exit()
+    # player wins 
     else:
         print(f"\n{GREEN}Victory! Found {enemy_gold} gold.{RESET}")
         player["gold"] += enemy_gold
@@ -204,9 +209,11 @@ print("\033[0;35m-\033[0m" * 40)
 print(f"        \033[0;35mWelcome to the Dungeon!\n             {player_name}!\033[0m")
 print("\033[0;35m-\033[0m" * 40)
 
+# call function choose_role to choose what role the player wants
 player_role = choose_role()
-current_floor = 1
+current_floor = 1 #the dungeon starts on floor 1
 
+# player stats
 player = {
     "name": player_name,
     "role": player_role,
@@ -236,7 +243,7 @@ while current_floor <= 5:
         
         if final_choice == "1":
             f_name = spawn_final_boss() # Spawns the Dragon!
-            if battle(f_name, FINAL_BOSS_STATS): 
+            if battle(f_name, FINAL_BOSS_STATS): #player will battle the dragon 
                 current_floor += 1
                 continue 
         elif final_choice == "2":
@@ -272,11 +279,14 @@ while current_floor <= 5:
         if battle(b_name, BOSS_STATS):
             current_floor += 1
             print(f"\n--- BOSS DEFEATED! Moving to Floor {current_floor} ---")
-            
+    
+    # to open shop 
     elif move == "3":
         shop()
+    # display your current stats
     elif move == "4":
         display_stats()
+    # exits the game (Ends the program)
     elif move == "5":
         print("Giving up so soon? Goodbye!")
         break
