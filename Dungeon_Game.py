@@ -160,7 +160,7 @@ def battle(enemy_name, stats_dict):
 
         # ENEMY TURN
         if enemy_hp > 0:
-            e_damage = max(1, enemy_atk - player["def"])
+            e_damage = max(1, enemy_atk - player["def"]) #the same as the one in the player side
 
             # DODGE has Standard 50/50 Chance
             if is_dodging:
@@ -242,7 +242,7 @@ while current_floor <= 5:
         final_choice = input("There is no turning back now. Choose: ")
         
         if final_choice == "1":
-            f_name = spawn_final_boss() # Spawns the Dragon!
+            f_name = spawn_final_boss() # Spawns the Dragon
             if battle(f_name, FINAL_BOSS_STATS): #player will battle the dragon 
                 current_floor += 1
                 continue 
