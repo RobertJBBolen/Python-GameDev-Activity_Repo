@@ -58,8 +58,8 @@ BOSS_STATS = {
 # Final boss (Floor 5 only)
 FINAL_BOSS_STATS = {
     "The Shadow Dragon": {
-        "hp": 300,
-        "atk": 40,
+        "hp": 200,
+        "atk": 30,
         "def": 20,
         "gold": 1000
     }

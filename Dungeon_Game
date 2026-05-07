@@ -1,22 +1,26 @@
 import random
-from enemies import ENEMY_STATS, BOSS_STATS, FINAL_BOSS_STATS, spawn_normal_enemy, spawn_boss_enemy, spawn_final_boss
+from colors import * #for coloring the text
+from enemies import *
 
 # DATA 
 ROLES = { 
     "Tank": {
         "hp": 150, 
         "atk": 15, 
-        "def": 10
+        "def": 10,
+        "skill": "Shield"
         },
     "DPS": {
         "hp": 100, 
         "atk": 25, 
-        "def": 5
+        "def": 5,
+        "skill": "Double Strike"
         },
     "Healer": {
         "hp": 85, 
         "atk": 12, 
-        "def": 5
+        "def": 5,
+        "skill": "Heal"
         }
 }
 
@@ -36,7 +40,7 @@ SHOP_ITEMS = {
      },
     "3": {
         "name": 
-        "Steel Plate", 
+        "Iron Armor", 
         "cost": 50, 
         "type": "armor", 
         "def_buff": 5
@@ -67,8 +71,8 @@ def choose_role():
 #function for shop
 def shop():
     print(f"\n--- Welcome to the Shop! (Gold: {player['gold']}) ---")
-    for k, v in SHOP_ITEMS.items(): #k = is for the number (1. ----) v is placeholder so the name and cost will be printed 
-        print(f"{k}. {v['name']} ({v['cost']} Gold)")
+    for n, i in SHOP_ITEMS.items(): #n = is for the number (1. ----) i is placeholder for the item name and cost
+        print(f"{n}. {i['name']} ({i['cost']} Gold)")
     print("4. Exit")
     
     #shopping for items
@@ -88,51 +92,109 @@ def shop():
             print("Not enough gold!")
 
 # function for both enemy and player action (Attack, Drink potion and run)
+
 def battle(enemy_name, stats_dict):
     enemy_hp = stats_dict[enemy_name]["hp"]
     enemy_atk = stats_dict[enemy_name]["atk"]
     enemy_def = stats_dict[enemy_name]["def"]
     enemy_gold = stats_dict[enemy_name]["gold"]
+    
+    # Combat States
+    is_blocking = False
+    is_dodging = False
+    is_parrying = False
 
-    print(f"\n!!! A {enemy_name} appeared on Floor {current_floor} !!!")
+    print(f"\n{RED}!!! A {enemy_name} appeared !!!{RESET}")
 
     while enemy_hp > 0 and player["hp"] > 0:
-        print(f"\n{enemy_name}: {enemy_hp} HP | {player['name']}: {player['hp']} HP")
-        action = input("1. Attack | 2. Potion | 3. Run: ")
+        print(f"\n{RED}{enemy_name}: {enemy_hp} HP{RESET} | {GREEN}{player['name']}: {player['hp']} HP{RESET}")
+        
+        # Display Menu based on Role
+        if player["role"] == "Healer":
+            print(f"{YELLOW}1. Attack | 2. Heal (Skill) | 3. Dodge | 4. Potion{RESET}")
+        elif player["role"] == "DPS":
+            print(f"{YELLOW}1. Attack | 2. Parry (Skill) | 3. Dodge | 4. Potion{RESET}")
+        elif player["role"] == "Tank":
+            print(f"{YELLOW}1. Attack | 2. Block (Skill) | 3. Dodge | 4. Potion{RESET}")
+        
+        action = input("Choose action: ")
+
+        # Reset states each turn
+        is_blocking = is_dodging = is_parrying = False
 
         if action == "1":
             damage = max(1, player["atk"] - enemy_def)
             enemy_hp -= damage
-            print(f"You dealt {damage} damage!")
-        elif action == "2":
+            print(f"{CYAN}You dealt {damage} damage!{RESET}")
+            
+        elif action == "2": # SPECIAL SKILLS
+            if player["role"] == "Healer":
+                heal = 25
+                player["hp"] = min(player["max_hp"], player["hp"] + heal)
+                print(f"{GREEN}You cast Heal! Restored {heal} HP.{RESET}")
+            elif player["role"] == "DPS":
+                print(f"{MAGENTA}You prepare to Parry! (High chance to reflect damage){RESET}")
+                is_parrying = True
+            elif player["role"] == "Tank":
+                print(f"{BLUE}You hide down behind your shield! (Massive defense){RESET}")
+                is_blocking = True
+
+        elif action == "3": # DODGE (Available to everyone)
+            print(f"{CYAN}You focus on dodging the next attack...{RESET}")
+            is_dodging = True
+
+        elif action == "4": # POTION
             if player["potions"] > 0:
-                heal_amount = 40
-                player["hp"] = min(player["max_hp"], player["hp"] + heal_amount)
+                player["hp"] = min(player["max_hp"], player["hp"] + 40)
                 player["potions"] -= 1
-                print(f"Healed! Current HP: {player['hp']}")
-                continue
+                print(f"{GREEN}Used Potion! HP: {player['hp']}{RESET}")
             else:
-                print("No potions left!")
+                print(f"{RED}No potions left!{RESET}")
                 continue
-        elif action == "3":
-            if player["gold"] >= 10:
-                player["gold"] -= 10
-                print("You escaped, but dropped 10 gold in the panic!")
-            else:
-                player["gold"] = 0
-                print("You escaped, but you have no gold left to lose!")
-            return False
-        
+        else:
+            print("Invalid choice!")
+            continue
+
+        # ENEMY TURN
         if enemy_hp > 0:
             e_damage = max(1, enemy_atk - player["def"])
+
+            # 1. DODGE Standard 50/50 Chance
+            if is_dodging:
+                if random.random() < 0.50:
+                    print(f"{CYAN}WHOOSH! You dodged the attack!{RESET}")
+                    e_damage = 0
+                else:
+                    print(f"{RED}Dodge failed!{RESET}")
+
+            # 2. BLOCK Tank Guaranteed but partial
+            elif is_blocking:
+                e_damage = e_damage // 5
+                print(f"{BLUE}CLANG! Your shield absorbed the impact.{RESET}")
+
+            # 3. PARRY (DPS - High Risk / Low Chance / High Reward)
+            elif is_parrying:
+                # Lowered to 35% chance - requires luck!
+                if random.random() < 0.35:
+                    counter_dmg = player["atk"] # Deals full attack damage back!
+                    enemy_hp -= counter_dmg
+                    print(f"{MAGENTA}PERFECT PARRY! You deflected the hit and countered for {counter_dmg}!{RESET}")
+                    e_damage = 0
+                else:
+                    # Failed parry makes you take 1.2x more damage!
+                    e_damage = int(e_damage * 1.2)
+                    print(f"{RED}PARRY FAILED! You left yourself wide open!{RESET}")
+
+            # Apply final damage to player
             player["hp"] -= e_damage
-            print(f"The {enemy_name} hits you for {e_damage} damage!")
+            if e_damage > 0:
+                print(f"{RED}The {enemy_name} hits you for {e_damage} damage!{RESET}")
 
     if player["hp"] <= 0:
-        print("\nYOU HAVE BEEN DEFEATED.")
+        print(f"\n{RED}YOU HAVE BEEN DEFEATED.{RESET}")
         exit()
     else:
-        print(f"Victory! You killed {enemy_name} and found {enemy_gold} gold.")
+        print(f"\n{GREEN}Victory! Found {enemy_gold} gold.{RESET}")
         player["gold"] += enemy_gold
         return True
 
@@ -164,9 +226,9 @@ while current_floor <= 5:
     
     # Check if its the final floor
     if current_floor == 5:
-        print("\n" + "!" * 53)
-        print("!!!   WARNING: YOU HAVE REACHED THE FINAL FLOOR   !!!")
-        print("!" * 53)
+        print(f"{RED}!{RESET}" * 53)
+        print(f"{RED}!!!   WARNING: YOU HAVE REACHED THE FINAL FLOOR   !!!{RESET}")
+        print(f"{RED}!{RESET}" * 53)
         
         # Give the player a final choice: Fight or Shop (one last time)
         print("\n1. FACE THE FINAL BOSS\n2. Final Visit to Shop\n3. View Stats")
@@ -189,12 +251,21 @@ while current_floor <= 5:
     move = input("What will you do? ")
 
     if move == "1":
-        e_name = spawn_normal_enemy()
-        if battle(e_name, ENEMY_STATS):
-            # 50% chance to find stairs
-            if random.random() > 0.5: 
+        # 15% chance for a Boss to ambush you, 85% for a Normal enemy
+        if random.random() < 0.15:
+            print(f"\n{RED}!!! AMBUSH !!! A Boss was lurking in the shadows!{RESET}")
+            e_name = spawn_boss_enemy()
+            battle_success = battle(e_name, BOSS_STATS)
+        else:
+            e_name = spawn_normal_enemy()
+            battle_success = battle(e_name, ENEMY_STATS)
+            
+        # If you won the battle (Normal or Boss)
+        if battle_success:
+            # 40% chance to find the stairs after any successful exploration
+            if random.random() < 0.40: 
                 current_floor += 1
-                print(f"\n--- You found stairs! Moving to Floor {current_floor} ---")
+                print(f"\n{BLUE}--- You found stairs! Descending to Floor {current_floor} ---{RESET}")
                 
     elif move == "2":
         b_name = spawn_boss_enemy()
