@@ -27,12 +27,12 @@ SHOP_ITEMS = {
         "cost": 30, 
         "type": "potion"
         },
-    "2": 
-    {"name": 
-     "Iron Sword", 
-     "cost": 50, 
-     "type": "weapon", 
-     "atk_buff": 10
+    "2": {
+        "name": 
+        "Iron Sword", 
+        "cost": 50, 
+        "type": "weapon", 
+        "atk_buff": 10
      },
     "3": {
         "name": 
@@ -67,10 +67,11 @@ def choose_role():
 #function for shop
 def shop():
     print(f"\n--- Welcome to the Shop! (Gold: {player['gold']}) ---")
-    for k, v in SHOP_ITEMS.items(): #k = is for the number (1. ----) v is placeholder so the name and cost will be printed''
+    for k, v in SHOP_ITEMS.items(): #k = is for the number (1. ----) v is placeholder so the name and cost will be printed 
         print(f"{k}. {v['name']} ({v['cost']} Gold)")
     print("4. Exit")
     
+    #shopping for items
     choice = input("Buy something? ")
     if choice in SHOP_ITEMS:
         item = SHOP_ITEMS[choice]
