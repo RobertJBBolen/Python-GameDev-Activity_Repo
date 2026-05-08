@@ -53,6 +53,9 @@ SHOP_ITEMS = {
 def display_stats():
     print("\n===== PLAYER STATS =====")
     for stat, value in player.items():
+     if stat == "hp":
+        print(f"Hp: {player['hp']}/{player['max_hp']}")
+     elif stat != "max_hp":
         print(f"{stat.capitalize()}: {value}")
 
 #Function to choose roles loops until the player gives a valid choice
@@ -202,6 +205,24 @@ def battle(enemy_name, stats_dict):
         print(f"\n{GREEN}Victory! Found {enemy_gold} gold.{RESET}")
         player["gold"] += enemy_gold
         return True
+    
+def level_up():
+
+    print(f"\n{GREEN}*** LEVEL UP! ***")
+
+    player["max_hp"] += 20
+    player["hp"] = player["max_hp"]
+
+    player["atk"] += 3
+    player["def"] += 2
+    player["potions"] += 1
+
+
+    print(f"{GREEN}Your stats increased!")
+    print(f"{GREEN}+20 Max HP")
+    print(f"{GREEN}+3 ATK")
+    print(f"{GREEN}+2 DEF")
+    print(f"{GREEN}+1 Potion")
 
 #  START GAME
 player_name = input("Enter your player name: ")
@@ -272,12 +293,14 @@ while current_floor <= 5:
             # 40% chance to find the stairs after any successful exploration
             if random.random() < 0.40: 
                 current_floor += 1
+                level_up()
                 print(f"\n{BLUE}--- You found stairs! Descending to Floor {current_floor} ---{RESET}")
                 
     elif move == "2":
         b_name = spawn_boss_enemy()
         if battle(b_name, BOSS_STATS):
             current_floor += 1
+            level_up()
             print(f"\n--- BOSS DEFEATED! Moving to Floor {current_floor} ---")
     
     # to open shop 
