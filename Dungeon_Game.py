@@ -51,7 +51,7 @@ SHOP_ITEMS = {
 
 #Function to display stats it loops to display all the stats 
 def display_stats():
-    print("\n===== PLAYER STATS =====")
+    print(f"\n{BLUE}===== PLAYER STATS =====")
     for stat, value in player.items():
      if stat == "hp":
         print(f"Hp: {player['hp']}/{player['max_hp']}")
@@ -73,7 +73,7 @@ def choose_role():
 
 #function for shop 
 def shop():
-    print(f"\n--- Welcome to the Shop! (Gold: {player['gold']}) ---")
+    print(f"\n---{YELLOW} Welcome to the Shop! (Gold: {player['gold']}) ---")
     for n, i in SHOP_ITEMS.items(): #n = is for the number (1. ----) i is placeholder for the item name and cost
         print(f"{n}. {i['name']} ({i['cost']} Gold)")
     print("4. Exit")
@@ -112,7 +112,7 @@ def battle(enemy_name, stats_dict):
 
     #it will loop aslong as the enemy and player are still alive
     while enemy_hp > 0 and player["hp"] > 0:
-        print(f"\n{RED}{enemy_name}: {enemy_hp} HP{RESET} | {GREEN}{player['name']}: {player['hp']} HP{RESET}")
+        print(f"\n{RED}{enemy_name}: {enemy_hp} HP{RESET}|"f"{GREEN}{player['name']}: {player['hp']}/{player['max_hp']} HP{RESET}")
         
         # Display Menu depending on which Role was picked
         if player["role"] == "Healer":
@@ -137,7 +137,7 @@ def battle(enemy_name, stats_dict):
             if player["role"] == "Healer":
                 heal = 25
                 player["hp"] = min(player["max_hp"], player["hp"] + heal)
-                print(f"{GREEN}You cast Heal! Restored {heal} HP.{RESET}")
+                print(f"{GREEN}You cast Heal! HP: {player['hp']}/{player['max_hp']}{RESET}")
             elif player["role"] == "DPS":
                 print(f"{MAGENTA}You prepare to Parry! (High chance to reflect damage){RESET}")
                 is_parrying = True
@@ -192,7 +192,7 @@ def battle(enemy_name, stats_dict):
                     print(f"{RED}PARRY FAILED! You left yourself wide open!{RESET}")
 
             # Apply final damage of the enemy to player
-            player["hp"] -= e_damage
+            player["hp"] = max(0, player["hp"] - e_damage)
             if e_damage > 0:
                 print(f"{RED}The {enemy_name} hits you for {e_damage} damage!{RESET}")
 
@@ -319,3 +319,5 @@ if current_floor > 5:
     print(f"{GREEN}*{RESET}"*45)
     print(f"{GREEN}  CONGRATULATIONS! YOU HAVE CLEARED THE DUNGEON!{RESET}")
     print(f"{GREEN}*{RESET}"*45)
+
+    display_stats()
