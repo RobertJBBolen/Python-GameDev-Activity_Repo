@@ -11,9 +11,9 @@ ROLES = {
         "skill": "Shield"
         },
     "DPS": {
-        "hp": 120, 
+        "hp": 100, 
         "atk": 25, 
-        "def": 13,
+        "def": 5,
         "skill": "Double Strike"
         },
     "Healer": {
@@ -28,24 +28,36 @@ SHOP_ITEMS = {
     "1": {
         "name": 
         "Health Potion", 
+        "desc": "+40 HP",
         "cost": 30, 
         "type": "potion"
         },
     "2": {
         "name": 
         "Iron Sword", 
+        "desc": "+5 ATK",
         "cost": 50, 
         "type": "weapon", 
-        "atk_buff": 10
+        "atk_buff": 5
      },
     "3": {
         "name": 
-        "Iron Armor", 
+        "Iron Armor",
+        "desc": "+2 DEF",
         "cost": 50, 
         "type": "armor", 
-        "def_buff": 5
+        "def_buff": 2
         }
 }
+
+#SHOP LIMIT SYSTEM
+SHOP_LIMITS = {
+    "Health Potion": 0,
+    "Iron Sword": 0,
+    "Iron Armor": 0
+}
+
+MAX_LIMIT = 3
 
 # FUNCTIONS 
 
@@ -73,26 +85,58 @@ def choose_role():
 
 #function for shop 
 def shop():
-    print(f"\n---{YELLOW} Welcome to the Shop! (Gold: {player['gold']}) ---")
-    for n, i in SHOP_ITEMS.items(): #n = is for the number (1. ----) i is placeholder for the item name and cost
-        print(f"{n}. {i['name']} ({i['cost']} Gold)")
-    print("4. Exit")
-    
-    #shopping for items it checks if you have enough gold to buy an item from the shop + it permanently adds the buffs depends on what the item you bought in the shop (Except for the healing potion)
-    choice = input("Buy something? ")
-    if choice in SHOP_ITEMS:
+    while True:
+        print(f"\n---{YELLOW} Welcome to the Shop! (Gold: {player['gold']}) ---")
+
+        for n, i in SHOP_ITEMS.items():
+            item_name = i["name"]
+            bought = SHOP_LIMITS[item_name]
+
+            print(f"{n}. {item_name} {i['desc']} ({i['cost']} Gold) [{bought}/{MAX_LIMIT}]")
+
+        print("4. Exit")
+
+        choice = input("Buy something? ")
+
+        # EXIT SHOP
+        if choice == "4":
+            print("Leaving shop...")
+            break
+
+        # INVALID INPUT
+        if choice not in SHOP_ITEMS:
+            print("Invalid choice!")
+            continue
+
         item = SHOP_ITEMS[choice]
-        if player["gold"] >= item["cost"]:
-            player["gold"] -= item["cost"]
-            if item["type"] == "potion":
-                player["potions"] += 1
-            elif item["type"] == "weapon":
-                player["atk"] += item["atk_buff"]
-            elif item["type"] == "armor":
-                player["def"] += item["def_buff"]
-            print(f"Purchased {item['name']}!")
-        else:
-            print("Not enough gold!")
+        item_name = item["name"]
+
+        # LIMIT CHECK
+        if SHOP_LIMITS[item_name] >= MAX_LIMIT:
+            print(f"{RED}{item_name} already reached max limit!{RESET}")
+            continue
+
+        # GOLD CHECK
+        if player["gold"] < item["cost"]:
+            print(f"{RED}Not enough gold!{RESET}")
+            continue
+
+        # BUY ITEM
+        player["gold"] -= item["cost"]
+        SHOP_LIMITS[item_name] += 1
+
+        # APPLY ITEM EFFECT
+        if item["type"] == "potion":
+            player["potions"] += 1
+
+        elif item["type"] == "weapon":
+            player["atk"] += item["atk_buff"]
+
+        elif item["type"] == "armor":
+            player["def"] += item["def_buff"]
+
+        print(f"{GREEN}Purchased {item_name}!{RESET}")
+        print(f"{CYAN}({SHOP_LIMITS[item_name]}/{MAX_LIMIT}) bought{RESET}")
 
 # function for both enemy and player action (Attack, Drink potion and run)
 
@@ -135,7 +179,7 @@ def battle(enemy_name, stats_dict):
             
         elif action == "2": # SPECIAL SKILLS for each roles
             if player["role"] == "Healer":
-                heal = 25
+                heal = 35
                 player["hp"] = min(player["max_hp"], player["hp"] + heal)
                 print(f"{GREEN}You cast Heal! HP: {player['hp']}/{player['max_hp']}{RESET}")
             elif player["role"] == "DPS":
@@ -210,18 +254,18 @@ def level_up():
 
     print(f"\n{GREEN}*** LEVEL UP! ***")
 
-    player["max_hp"] += 20
+    player["max_hp"] += 15
     player["hp"] = player["max_hp"]
 
-    player["atk"] += 3
-    player["def"] += 2
+    player["atk"] += 2
+    player["def"] += 1
     player["potions"] += 1
 
 
     print(f"{GREEN}Your stats increased!")
-    print(f"{GREEN}+20 Max HP")
-    print(f"{GREEN}+3 ATK")
-    print(f"{GREEN}+2 DEF")
+    print(f"{GREEN}+15 Max HP")
+    print(f"{GREEN}+2 ATK")
+    print(f"{GREEN}+1 DEF")
     print(f"{GREEN}+1 Potion")
 
 #  START GAME
@@ -291,7 +335,7 @@ while current_floor <= 5:
         # If you won the battle (Normal or Boss)
         if battle_success:
             # 40% chance to find the stairs after any successful exploration
-            if random.random() < 0.40: 
+            if random.random() < 0.40:          
                 current_floor += 1
                 level_up()
                 print(f"\n{BLUE}--- You found stairs! Descending to Floor {current_floor} ---{RESET}")
