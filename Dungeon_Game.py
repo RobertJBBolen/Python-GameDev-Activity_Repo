@@ -65,10 +65,12 @@ MAX_LIMIT = 3
 def display_stats():
     print(f"\n{BLUE}===== PLAYER STATS =====")
     for stat, value in player.items():
-     if stat == "hp":
-        print(f"Hp: {player['hp']}/{player['max_hp']}")
-     elif stat != "max_hp":
-        print(f"{stat.capitalize()}: {value}")
+        if stat == "hp":
+            print(f"Hp: {player['hp']}/{player['max_hp']}")
+        elif stat == "Inventory":
+            print(f"Inventory: {', '.join(player['Inventory']) if player['Inventory'] else 'Empty'}")
+        elif stat != "max_hp":
+            print(f"{stat.capitalize()}: {value}")
 
 #Function to choose roles loops until the player gives a valid choice
 def choose_role():
@@ -82,6 +84,35 @@ def choose_role():
         if role == "3": 
             return "Healer"
         print("Invalid choice!")
+
+def use_inventory():
+    print(f"\n{BLUE}===== Your Inventory ====={RESET}")
+    if not player["Inventory"]:
+        print("Your backpack is empty")
+        return
+    
+    print(f"Items: {player['Inventory']}")
+    use_item = input("Type the name of the item to use(or type 'exit'): ").title()
+
+    if use_item in player["Inventory"]:
+        # Remove the item first
+        player["Inventory"].remove(use_item)
+
+        # Simple effects
+        if use_item == "Health Potion":
+            player["hp"] = min(player["max_hp"], player["hp"] + 40)
+            print(f"{GREEN}Used Health Potion! HP is now {player['hp']}{RESET}")
+        
+        elif use_item == "Iron Sword":
+            player["atk"] += 5
+            print(f"{CYAN}Equipped Iron Sword! ATK increased!{RESET}")
+        
+        elif use_item == "Iron Armor":
+            player["def"] += 2
+            print(f"{CYAN}Equipped Iron Armor! DEF increased!{RESET}")        
+    else:
+        if use_item != "Exit":
+            print("You don't have that item.")
 
 #function for shop 
 def shop():
@@ -127,16 +158,18 @@ def shop():
 
         # APPLY ITEM EFFECT
         if item["type"] == "potion":
-            player["potions"] += 1
+            player["Inventory"].append("Health Potion")
 
         elif item["type"] == "weapon":
-            player["atk"] += item["atk_buff"]
+            player["Inventory"].append("Iron Sword")
 
         elif item["type"] == "armor":
-            player["def"] += item["def_buff"]
+            player["Inventory"].append("Iron Armor")
 
         print(f"{GREEN}Purchased {item_name}!{RESET}")
         print(f"{CYAN}({SHOP_LIMITS[item_name]}/{MAX_LIMIT}) bought{RESET}")
+
+
 
 # function for both enemy and player action (Attack, Drink potion and run)
 
@@ -146,7 +179,9 @@ def battle(enemy_name, stats_dict):
     enemy_atk = stats_dict[enemy_name]["atk"]
     enemy_def = stats_dict[enemy_name]["def"]
     enemy_gold = stats_dict[enemy_name]["gold"]
-    
+    enemy_skill = stats_dict[enemy_name]["skill"]
+    enemy_loot = stats_dict[enemy_name]["loot"]
+
     # Combat States 
     is_blocking = False
     is_dodging = False
@@ -193,13 +228,17 @@ def battle(enemy_name, stats_dict):
             print(f"{CYAN}You focus on dodging the next attack...{RESET}")
             is_dodging = True
 
-        elif action == "4": # POTION
-            if player["potions"] > 0:
+        elif action == "4": # POTION ACTION
+             if "Health Potion" in player["Inventory"]:
+                # Heal the player
                 player["hp"] = min(player["max_hp"], player["hp"] + 40)
-                player["potions"] -= 1
-                print(f"{GREEN}Used Potion! HP: {player['hp']}{RESET}")
-            else:
-                print(f"{RED}No potions left!{RESET}")
+        
+                # Remove EXACTLY ONE potion from the list
+                player["Inventory"].remove("Health Potion")
+        
+                print(f"{GREEN}Used Health Potion! HP: {player['hp']}{RESET}")
+             else:
+                print(f"{RED}You don't have any Health Potions in your inventory!{RESET}")
                 continue
         else:
             print("Invalid choice!")
@@ -207,7 +246,12 @@ def battle(enemy_name, stats_dict):
 
         # ENEMY TURN
         if enemy_hp > 0:
-            e_damage = max(1, enemy_atk - player["def"]) #the same as the one in the player side
+            if random.random() < 0.20:
+                print(f"{RED}{enemy_name} used {stats_dict[enemy_name]['skill']}!{RESET}")
+                e_skill_dmg_atk = int(enemy_atk * 1.5)
+                e_damage = max(1, e_skill_dmg_atk - player["def"])
+            else:
+                e_damage = max(1, enemy_atk - player["def"]) #the same as the one in the player side
 
             # DODGE has Standard 50/50 Chance
             if is_dodging:
@@ -244,8 +288,14 @@ def battle(enemy_name, stats_dict):
     if player["hp"] <= 0:
         print(f"\n{RED}YOU HAVE BEEN DEFEATED.{RESET}")
         exit()
-    # player wins 
+    # player wins and loot drops 
     else:
+        loot_item = stats_dict[enemy_name].get("loot")
+
+        if loot_item and random.random() < 0.50: # 50% chances of drop rate
+            player["Inventory"].append(loot_item)
+            print(f"{MAGENTA}The monster dropped: {loot_item}!{RESET}")
+
         print(f"\n{GREEN}Victory! Found {enemy_gold} gold.{RESET}")
         player["gold"] += enemy_gold
         return True
@@ -259,7 +309,7 @@ def level_up():
 
     player["atk"] += 2
     player["def"] += 1
-    player["potions"] += 1
+    player["Inventory"].append("Health Potion")
 
 
     print(f"{GREEN}Your stats increased!")
@@ -287,7 +337,7 @@ player = {
     "atk": ROLES[player_role]["atk"],
     "def": ROLES[player_role]["def"],
     "gold": 50,
-    "potions": 3
+    "Inventory": ["Health Potion", "Health Potion", "Health Potion"] #Will hold loot drops or the items player buys || will start with 3 hp potions
 }
 
 # MAIN GAME LOOP
@@ -303,7 +353,7 @@ while current_floor <= 5:
         print(f"{RED}!{RESET}" * 53)
         
         # Give the player a final choice: Fight or Shop (one last time)
-        print("\n1. FACE THE FINAL BOSS\n2. Final Visit to Shop\n3. View Stats")
+        print("\n1. FACE THE FINAL BOSS\n2. Final Visit to Shop\n3. View Stats\n4. Inventory")
         final_choice = input("There is no turning back now. Choose: ")
         
         if final_choice == "1":
@@ -317,28 +367,47 @@ while current_floor <= 5:
         elif final_choice == "3":
             display_stats()
             continue
+        elif final_choice == "4": #Inventory
+            use_inventory()
+            continue
 
     # Menu for Floors 1-4
-    print("1. Explore (Fight) | 2. Boss Altar | 3. Shop | 4. Stats | 5. Quit")
+    print("1. Explore | 2. Boss Altar | 3. Shop | 4. Stats | 5. Inventory | 6. Quit") 
     move = input("What will you do? ")
 
     if move == "1":
+        event = random.choice(["Fight", "Fight", "Treasure", "Nothing"])
+        # Treasure room although only 1/4 chances of getting
+        if event == "Treasure":
+            gold_found = random.randint(20, 50) # random gold loot 20 - 50 only
+            player["gold"] += gold_found
+            print(f"{YELLOW} You Found a Treasure Chest!   {RESET}")
+            print(f"You gained {gold_found} gold!")
+
+            if random.random() < 0.3:
+                player["Inventory"].append("Health Potion")
+                print("You found a Health Potion inside!")
+        # Empty room 
+        elif event == "Nothing":
+            print(f"You wander for a while but find nothing")
+        # Fight Enemies has 2/4 chances of getting
+        elif event == "Fight":
         # 15% chance for a Boss to ambush you, 85% for a Normal enemy
-        if random.random() < 0.15:
-            print(f"\n{RED}!!! AMBUSH !!! A Boss was lurking in the shadows!{RESET}")
-            e_name = spawn_boss_enemy()
-            battle_success = battle(e_name, BOSS_STATS)
-        else:
-            e_name = spawn_normal_enemy()
-            battle_success = battle(e_name, ENEMY_STATS)
-            
-        # If you won the battle (Normal or Boss)
-        if battle_success:
-            # 40% chance to find the stairs after any successful exploration
-            if random.random() < 0.40:          
-                current_floor += 1
-                level_up()
-                print(f"\n{BLUE}--- You found stairs! Descending to Floor {current_floor} ---{RESET}")
+            if random.random() < 0.15:
+                print(f"\n{RED}!!! AMBUSH !!! A Boss was lurking in the shadows!{RESET}")
+                e_name = spawn_boss_enemy()
+                battle_success = battle(e_name, BOSS_STATS)
+            else:
+                e_name = spawn_normal_enemy()
+                battle_success = battle(e_name, ENEMY_STATS)
+                
+            # If you won the battle (Normal or Boss)
+            if battle_success:
+                # 40% chance to find the stairs after any successful exploration
+                if random.random() < 0.40:          
+                    current_floor += 1
+                    level_up()
+                    print(f"\n{BLUE}--- You found stairs! Descending to Floor {current_floor} ---{RESET}")
                 
     elif move == "2":
         b_name = spawn_boss_enemy()
@@ -353,8 +422,10 @@ while current_floor <= 5:
     # display your current stats
     elif move == "4":
         display_stats()
+    elif move == "5": #Open Inventory
+        use_inventory()
     # exits the game (Ends the program)
-    elif move == "5":
+    elif move == "6":
         print("Giving up so soon? Goodbye!")
         break
 

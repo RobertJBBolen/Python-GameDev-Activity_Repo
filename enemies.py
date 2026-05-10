@@ -6,31 +6,41 @@ ENEMY_STATS = {
         "hp": 30,
         "atk": 5,
         "def": 3,
-        "gold": 10
+        "skill": "Club Smack",
+        "gold": 10,
+        "loot": "Health Potion"
     },
      "Slime": {
         "hp": 40,
         "atk": 8,
         "def": 2,
-        "gold": 20
+        "skill": "Slimy Bite",
+        "gold": 20,
+        "loot": "Health Potion"
     },
      "Orc": {
         "hp": 50,
         "atk": 15,
         "def": 10,
-        "gold": 40
+        "skill": "Heavy Chop",
+        "gold": 40,
+        "loot": "Health Potion"
     },
      "Wolf": {
         "hp": 40,
         "atk": 10,
         "def": 2,
-        "gold": 30
+        "skill": "Bite",
+        "gold": 30,
+        "loot": "Health Potion"
     },
      "Ogre": {
         "hp": 60,
         "atk": 15,
         "def": 10,
-        "gold": 50
+        "skill": "Head Smash",
+        "gold": 50,
+        "loot": "Health Potion"
     }
 }
 
@@ -40,28 +50,37 @@ BOSS_STATS = {
         "hp": 100,
         "atk": 25,
         "def": 10,
-        "gold": 100
+        "skill": "Iron Cleave",
+        "gold": 100,
+        "loot": "Iron Sword"
     },
     "Uruk-hai": {
         "hp": 150,
         "atk": 25,
         "def": 15,
-        "gold": 200
+        "skill": "Bone Crusher",
+        "gold": 200,
+        "loot": "Health Potion"
     },
     "Alpha Wolf": {
         "hp": 150,
         "atk": 25,
         "def": 15,
-        "gold": 200
+        "skill": "Alpha Bite",
+        "gold": 200,
+        "loot": "Iron Armor"
     },
 }
 # Final boss (Floor 5 only)
 FINAL_BOSS_STATS = {
     "The Shadow Dragon": {
         "hp": 200,
-        "atk": 30,
-        "def": 20,
-        "gold": 1000
+        "atk": 28,
+        "def": 17,
+        "skill": "Shadow Breath",
+        "gold": 1000,
+        "loot": "Dragon Egg"
+
     }
 }
 
